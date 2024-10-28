@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Created Tables</title>
+    <style>
+        .table-container {
+            display: flex;
+            flex-wrap: nowrap; /* Prevent line wrapping */
+            overflow-x: auto; /* Horizontal scrolling if content overflows */
+            white-space: nowrap;
+        }
+        .table-item {
+            margin-right: 20px; /* Space between tables */
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #333;
+            padding: 8px;
+            text-align: left;
+        }
+        h2 {
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Created Tables</h1>
+    <form action="/export_excel" method="get">
+        <button type="submit">Export to Excel</button>
+    </form>
+    <div class="table-container">
+    {% for table_name, data in tables_data|dictsort %}
+        <div class="table-item">
+            <h2>{{ table_name }}</h2>
+            <table>
+                <thead>
+                    <tr>
+                        {% for column in data.columns %}
+                            <th>{{ column }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data.rows %}
+                        <tr>
+                            {% for cell in row %}
+                                <td>{{ cell if cell is not none else "" }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endfor %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,148 @@
+site,domain,brand,cluster,node,rack position,rack unit
+SNK,Management Domain,ZTE,Support Node 01,R5200G5(Arch2-2)RH Supporting Node for OCP,R1,02U
+SNK,Management Domain,ZTE,Support Node 01,R5200G5(Arch2-2)RH Supporting Node for OCP,R2,02U
+SNK,Management Domain,ZTE,SDN 01,R5200G5(Arch2-2) ZTE ZENIC(SDN-C),R1,03U
+SNK,Management Domain,ZTE,SDN 01,R5200G5(Arch2-2) ZTE ZENIC(SDN-C),R2,03U
+SNK,Management Domain,ZTE,SDN 01,R5200G5(Arch2-2) ZTE ZENIC(SDN-C),R3,03U
+SNK,Management Domain,ZTE,SDN 01,R5200G5(Arch2-2) ZTE TECS Openstack(PIM & BM & OCP-SDN-Adapter),R1,01U
+SNK,Management Domain,ZTE,SDN 01,R5200G5(Arch2-2) ZTE TECS Openstack(PIM & BM & OCP-SDN-Adapter),R2,01U
+SNK,Management Domain,ZTE,SDN 01,R5200G5(Arch2-2) ZTE TECS Openstack(PIM & BM & OCP-SDN-Adapter),R3,01U
+SNK,Management Domain,ZTE,BN EMS 01,R5200G5(Arch2-2) BN EMS Server,R3,02U
+SNK,Management Domain,ZTE,Splunk HF 01,R5200G5(Arch2-2)Splunk forwarder,R2,05U
+SNK,Management Domain,ZTE,Splunk HF 01,R5200G5(Arch2-2)Splunk forwarder,R2,06U
+SNK,Management Domain,H3C,H3C UniServer 01,H3C UniServer R4900 G5_Tapping,R1,14U
+SNK,Management Domain,H3C,H3C UniServer 01,H3C UniServer R4900 G5_Tapping,R2,14U
+SNK,Management Domain,H3C,H3C TAP8000-CE54_Tapping 01,H3C TAP8000-CE54_Tapping,SW R3,22U
+SNK,Management Domain,H3C,H3C TAP8000-CE54_Tapping 01,H3C TAP8000-CE54_Tapping,SW R4,22U
+SNK,Management Domain,ZTE,Backup Storage 01,KS3200 V2 ZTE Backup Storage,R3,06U
+SNK,Management Domain,ZTE,Backup Server 01,R5200G5(Arch2-1)Backup Server,R1,04U
+SNK,Management Domain,ZTE,Backup Server 01,R5200G5(Arch2-1)Backup Server,R2,04U
+SNK,Management Domain,ZTE,Backup Server 01,R5200G5(Arch2-1)Backup Server,R3,04U
+SNK,Management Domain,ZTE,VAScanner 01,R5200G5(Arch2-2)VAScanner,R1,05U
+SNK,Management Domain,ZTE,VAScanner 01,R5200G5(Arch2-2)VAScanner,R1,06U
+SNK,Management Domain,ZTE,VAScanner 01,R5200G5(Arch2-2)VAScanner,R1,07U
+SNK,Management Domain,ZTE,FW EMS 01,R5300G5(Arch3) FW EMS Server,R1,30U
+SNK,Management Domain,ZTE,FW EMS 01,R5300G5(Arch3) FW EMS Server,R2,30U
+SNK,Management Domain,Fortinet,FW 01,FG-2600F-DC,R1,23U
+SNK,Management Domain,Fortinet,FW 01,FG-2600F-DC,R2,23U
+SNK,Management Domain,Fortinet,FW 01,FG-1800F-DC,R1,25U
+SNK,Management Domain,Fortinet,FW 01,FG-1800F-DC,R2,25U
+SNK,Management Domain,Fortinet,FW 01,FAD-1200F-DC,R1,28U
+SNK,Management Domain,Fortinet,FW 01,FAD-1200F-DC,R2,28U
+SNK,Management Domain,H3C,Splitter 01,TRC-OEO-ODN-8M-MPO Splitter,SW R3,24U
+SNK,Management Domain,ZTE,SW-MGT 01,ZXR10 5960X-56QU-HF (MAS),SW R3,20U
+SNK,Management Domain,ZTE,SW-MGT 01,ZXR10 5960X-56QU-HF (MAS),SW R4,20U
+SNK,Management Domain,ZTE,SW-MGT 01,ZXR10 5960X-56QU-HF (MNG&STOR Leaf SW),R1,17U
+SNK,Management Domain,ZTE,SW-MGT 01,ZXR10 5960X-56QU-HF (MNG&STOR Leaf SW),R2,17U
+SNK,Management Domain,ZTE,SW-MGT 01,ZXR10 5960X-56QU-HF (Service Leaf 25G SW),R1,19U
+SNK,Management Domain,ZTE,SW-MGT 01,ZXR10 5960X-56QU-HF (Service Leaf 25G SW),R2,19U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-2)RH APP Master Node,R4,05U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-2)RH APP Master Node,R4,06U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-2)RH APP Master Node,R5,05U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-2)RH Infra Logging-Metrics-Router,R4,07U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-2)RH Infra Logging-Metrics-Router,R5,06U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-2)RH Infra Logging-Metrics-Router,R5,07U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R4,08U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R4,09U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R4,10U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R4,11U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R4,12U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R4,13U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R4,14U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R4,24U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R4,25U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R4,26U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R4,27U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R4,28U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R4,29U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R4,30U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R4,31U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R4,32U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R4,33U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R4,34U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R5,08U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R5,09U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R5,10U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R5,11U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R5,12U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R5,13U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R5,14U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5300G5(Arch3)RH ODF for OCP Cluster 01,R4,01U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5300G5(Arch3)RH ODF for OCP Cluster 01,R4,03U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5300G5(Arch3)RH ODF for OCP Cluster 01,R5,01U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5300G5(Arch3)RH ODF for OCP Cluster 01,R5,03U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(HSM)HSM_Pool 01,R5,24U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(HSM)HSM_Pool 01,R5,25U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(HSM)HSM_Pool 01,R5,26U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(HSM)HSM_Pool 01,R5,27U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(HSM)HSM_Pool 01,R5,28U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(HSM)HSM_Pool 01,R5,29U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(HSM)HSM_Pool 01,R5,30U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-2)Splunk forwarder,R5,22U
+SNK,Secure Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-2)Splunk forwarder,R5,23U
+SNK,Secure Domain,ZTE,OCP Cluster 01,ZXR10 5960X-56QU-HF (MNG&STOR Leaf SW),R4,16U
+SNK,Secure Domain,ZTE,OCP Cluster 01,ZXR10 5960X-56QU-HF (MNG&STOR Leaf SW),R5,16U
+SNK,Secure Domain,ZTE,OCP Cluster 01,ZXR10 5960X-56QU-HF (MNG&STOR Leaf SW),R4,18U
+SNK,Secure Domain,ZTE,OCP Cluster 01,ZXR10 5960X-56QU-HF (MNG&STOR Leaf SW),R5,18U
+SNK,Secure Domain,ZTE,OCP Cluster 01,ZXR10 5960X-56QU-HF (Service Leaf 25G SW),R4,20U
+SNK,Secure Domain,ZTE,OCP Cluster 01,ZXR10 5960X-56QU-HF (Service Leaf 25G SW),R5,20U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-2)RH APP Master Node,R6,05U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-2)RH APP Master Node,R6,06U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-2)RH APP Master Node,R7,05U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-2)RH Infra Logging-Metrics-Router,R6,07U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-2)RH Infra Logging-Metrics-Router,R7,06U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-2)RH Infra Logging-Metrics-Router,R7,07U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R6,08U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R6,09U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R6,10U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R6,11U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R6,12U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R6,13U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R6,14U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R6,24U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R6,25U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R6,26U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R6,27U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R6,28U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R6,29U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R6,30U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R6,31U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R6,32U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R6,33U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R6,34U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R7,08U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R7,09U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R7,10U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R7,11U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R7,12U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R7,13U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R7,14U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R7,26U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R7,27U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R7,28U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R7,29U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-1)Workload_Cluster 01,R7,30U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5300G5(Arch3)RH ODF for OCP Cluster 01,R6,01U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5300G5(Arch3)RH ODF for OCP Cluster 01,R6,03U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5300G5(Arch3)RH ODF for OCP Cluster 01,R7,01U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5300G5(Arch3)RH ODF for OCP Cluster 01,R7,03U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-2)Splunk forwarder,R7,24U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,R5200G5(Arch2-2)Splunk forwarder,R7,25U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,ZXR10 5960X-56QU-HF (MNG&STOR Leaf SW for Cluster 01),R6,16U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,ZXR10 5960X-56QU-HF (MNG&STOR Leaf SW for Cluster 01),R7,16U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,ZXR10 5960X-56QU-HF (MNG&STOR Leaf SW for Cluster 01),R6,18U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,ZXR10 5960X-56QU-HF (MNG&STOR Leaf SW for Cluster 01),R7,18U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,ZXR10 5960X-56QU-HF (Service Leaf 25G SW for Cluster 01),R6,20U
+SNK,Non Exposed Domain,ZTE,OCP Cluster 01,ZXR10 5960X-56QU-HF (Service Leaf 25G SW for Cluster 01),R7,20U
+SNK,All Domain,ZTE,OCP Cluster 01,ZXR10 5950-60TM-E (OOB ACC)_All Dom,R3,21U
+SNK,All Domain,ZTE,OCP Cluster 01,ZXR10 5950-60TM-E (OOB ACC)_All Dom,R4,22U
+SNK,All Domain,ZTE,OCP Cluster 01,ZXR10 5950-60TM-E (OOB ACC)_All Dom,R6,22U
+SNK,All Domain,ZTE,OCP Cluster 01,ZXR10 5950-60TM-E (OOB ACC)_All Dom,R7,22U
+SNK,All Domain,ZTE,OCP Cluster 01,ZXR10 5950-60TM-E (OOB AGG)_All Dom,R1,21U
+SNK,All Domain,ZTE,OCP Cluster 01,ZXR10 5950-60TM-E (OOB AGG)_All Dom,R2,21U
+SNK,All Domain,ZTE,OCP Cluster 01,ZXR10 9904X (MNG&STOR Spine SW)_Switch_Y2024,SW R3,26U
+SNK,All Domain,ZTE,OCP Cluster 01,ZXR10 9904X (MNG&STOR Spine SW)_Switch_Y2024,SW R4,26U
+SNK,All Domain,ZTE,OCP Cluster 01,ZXR10 9916X (Service Spine SW)_Switch_Y2024,SW R5,01U
+SNK,All Domain,ZTE,OCP Cluster 01,ZXR10 9916X (Service Spine SW)_Switch_Y2024,SW R6,01U
+SNK,All Domain,ZTE,OCP Cluster 01,ZXR10 M6000-18S (DCGW RT)_Router_Y2024,SW R1,01U
+SNK,All Domain,ZTE,OCP Cluster 01,ZXR10 M6000-18S (DCGW RT)_Router_Y2024,SW R2,01U
