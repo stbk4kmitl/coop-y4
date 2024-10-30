@@ -6,6 +6,7 @@ import re
 import psycopg2
 from psycopg2 import sql
 import xlsxwriter
+import csv
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'temp'
@@ -887,8 +888,10 @@ def create_oob_acc_tables():
 
     conn.commit() 
     cur.close()
-    print('def: create_oob_acc_tables')
+    #print('def: create_oob_acc_tables')
     return acc_names
+
+
 
 def insert_data_to_oob_acc(acc_names):
     conn = psycopg2.connect(DATABASE_URL)
@@ -904,42 +907,40 @@ def insert_data_to_oob_acc(acc_names):
         elif 'tyb' in acc:
             prefix = 'tyb_r'
         else:
-            continue  # ข้ามถ้าไม่ตรงกับ snk, rst หรือ tyb
+            continue
 
         cur.execute(f"""
             SELECT table_name 
             FROM information_schema.tables 
             WHERE table_name LIKE '{prefix}%'; """)
         tables = cur.fetchall()
-        rack_tables.extend([table[0] for table in tables])  # เก็บชื่อของตารางที่เจอ
-        rack_tables = sorted(set(rack_tables))  # เรียงลำดับและเอาค่าที่ไม่ซ้ำ
-        print('rack_tables:', rack_tables)
+        rack_tables.extend([table[0] for table in tables])
+    rack_tables = sorted(set(rack_tables))
 
     port_index = 1  # เริ่มต้นที่พอร์ต 1
     acc_table_index = 0  # ตาราง OOB ACC แรก
-    rack_count = 0  # ตัวแปรนับจำนวน rack ในแต่ละตาราง OOB ACC
 
-    # ดึงข้อมูลจาก rack_tables
     for rack_table in rack_tables:
         cur.execute(f"""
             SELECT device_names, units 
             FROM {rack_table}
-            WHERE (units BETWEEN '01U' AND '15U') OR (units BETWEEN '23U' AND '34U')
+            WHERE (units BETWEEN '01U' AND '15U') OR (units BETWEEN '22U' AND '34U')
             ORDER BY units;
         """)
         rack_devices = cur.fetchall()
 
-        # แยกข้อมูลตามช่วง units
-        devices_01_15U = [device for device in rack_devices if '01U' <= str(device[1]) <= '15U']
-        devices_23_34U = [device for device in rack_devices if '23U' <= str(device[1]) <= '34U']
+        # แยกข้อมูลตามช่วง units และลบข้อมูลที่ไม่มีใน device[0]
+        devices_01_15U = [device for device in rack_devices if '01U' <= str(device[1]) <= '15U' and device[0]]
+        devices_22_34U = [device for device in rack_devices if '22U' <= str(device[1]) <= '34U' and device[0]]
 
+        # เพิ่มข้อมูลพิเศษในช่วง 01U-15U
         additional_devices = [device for device in devices_01_15U 
-            if device[0] and any(keyword in device[0] for keyword in ['CTRL', 'STORAGE'])]
-        devices_01_15U.extend(additional_devices)  # เพิ่มอุปกรณ์ที่ตรงตามเงื่อนไขลงในรายการเดิม
+                            if any(keyword in device[0] for keyword in ['CTRL', 'STORAGE'])]
+        devices_01_15U.extend(additional_devices)
 
-        devices_23_34U = [device for device in devices_23_34U 
-            if device[0] and not any(keyword in device[0] for keyword in ['FTIFW', 'FTFW4', 'FTWAF'])]
-
+        # กรองข้อมูลในช่วง 22U-34U และลบข้อมูลที่มี keyword ไม่ต้องการ
+        devices_22_34U = [device for device in devices_22_34U 
+                        if not any(keyword in device[0] for keyword in ['ACC', 'FTIFW', 'FTFW4', 'FTWAF'])]
         # ตรวจสอบว่ามีตาราง OOB ACC ให้ใช้งานหรือไม่
         if acc_table_index >= len(acc_names):
             print("All OOB ACC tables are full.")
@@ -947,46 +948,34 @@ def insert_data_to_oob_acc(acc_names):
 
         selected_table_name = acc_names[acc_table_index]
 
-        # ตรวจสอบว่ามีพอร์ตเหลือเพียงพอสำหรับช่วง 01U-15U หรือไม่
-        remaining_ports = 35 - (port_index - 1)
-        if len(devices_01_15U) > remaining_ports:
-            # ถ้าพอร์ตไม่เพียงพอ ให้ย้ายทั้งชุดไปยังตาราง OOB ACC ถัดไป
-            port_index = 1
-            acc_table_index += 1
-            # ตรวจสอบว่ามีตาราง OOB ACC ถัดไปหรือไม่
-            if acc_table_index >= len(acc_names):
-                print("All OOB ACC tables are full.")
-                break
-            selected_table_name = acc_names[acc_table_index]
-#ffdfsfdsfds
-        elif len(devices_01_15U) == remaining_ports:
-            # ถ้าจำนวนอุปกรณ์พอดีกับพอร์ตที่เหลือ ให้ใส่ข้อมูลทั้งหมดในตารางปัจจุบัน
-            for device_name, unit in devices_01_15U:
-                if device_name:
-                    cur.execute(f"""
-                        UPDATE {selected_table_name}
-                        SET device_names = %s
-                        WHERE port_id = %s;
-                    """, (device_name, port_index))
-                    port_index += 1
-            # พอร์ตเต็ม 35 พอร์ตแล้ว ย้ายไปยังตารางถัดไป
-            acc_table_index += 1
-            port_index = 1  # รีเซ็ต port_index เมื่อย้ายตาราง
-            if acc_table_index >= len(acc_names):
-                print("All OOB ACC tables are full.")
-                break
-            selected_table_name = acc_names[acc_table_index]
-        else:
-            # ถ้าพอร์ตเหลือเพียงพอ ให้ใส่ข้อมูลลงในตารางปัจจุบัน        
-
-#dgd
-
-
-
-
-        #else:
-
         # ใส่ข้อมูลจากช่วง 01U-15U ลงในตาราง OOB ACC
+        remaining_ports = 35 - (port_index - 1)
+        if len(devices_01_15U) <= remaining_ports:
+            for device_name, unit in devices_01_15U:
+                if device_name:
+                    cur.execute(f"""
+                        UPDATE {selected_table_name}
+                        SET device_names = %s
+                        WHERE port_id = %s;
+                    """, (device_name, port_index))
+                    port_index += 1
+            # รีเซ็ตค่าเมื่อพอร์ตเต็มพอดี
+            if port_index > 35:
+                acc_table_index += 1
+                port_index = 1
+                if acc_table_index >= len(acc_names):
+                    print("All OOB ACC tables are full.")
+                    break
+                selected_table_name = acc_names[acc_table_index]
+        else:
+            # ถ้าพอร์ตไม่พอ ให้ย้ายทั้งชุดไปยังตาราง OOB ACC ถัดไป
+            acc_table_index += 1
+            port_index = 1
+            if acc_table_index >= len(acc_names):
+                print("All OOB ACC tables are full.")
+                break
+            selected_table_name = acc_names[acc_table_index]
+
             for device_name, unit in devices_01_15U:
                 if device_name:
                     cur.execute(f"""
@@ -996,24 +985,10 @@ def insert_data_to_oob_acc(acc_names):
                     """, (device_name, port_index))
                     port_index += 1
 
-        # ตรวจสอบว่ามีพอร์ตเหลือเพียงพอสำหรับช่วง 23U-34U หรือไม่
+        # ตรวจสอบพอร์ตสำหรับช่วง 22U-34U
         remaining_ports = 35 - (port_index - 1)
-        if len(devices_23_34U) > remaining_ports:
-            # ถ้าพอร์ตไม่พอ ให้ย้ายทั้งชุดไปยังตาราง OOB ACC ถัดไป
-            port_index = 1
-            acc_table_index += 1
-            if acc_table_index >= len(acc_names):
-                print("All OOB ACC tables are full.")
-                break
-            selected_table_name = acc_names[acc_table_index]
-        elif len(devices_23_34U) == remaining_ports:
-            # ถ้าจำนวนอุปกรณ์พอดีกับพอร์ตที่เหลือ ให้ใส่ข้อมูลทั้งหมดในตารางปัจจุบัน
-
-
-
-            #else:
-            # ถ้าพอร์ตเพียงพอ ให้เพิ่มข้อมูลช่วง 23U-34U ลงในตารางปัจจุบัน
-            for device_name, unit in devices_23_34U:
+        if len(devices_22_34U) <= remaining_ports:
+            for device_name, unit in devices_22_34U:
                 if device_name:
                     cur.execute(f"""
                         UPDATE {selected_table_name}
@@ -1021,39 +996,265 @@ def insert_data_to_oob_acc(acc_names):
                         WHERE port_id = %s;
                     """, (device_name, port_index))
                     port_index += 1
-           
+            # รีเซ็ตค่าเมื่อพอร์ตเต็มพอดี
+            if port_index > 35:
+                acc_table_index += 1
+                port_index = 1
+                if acc_table_index >= len(acc_names):
+                    print("All OOB ACC tables are full.")
+                    break
+                selected_table_name = acc_names[acc_table_index]
+        else:
+            # ถ้าพอร์ตไม่พอ ให้ย้ายทั้งชุดไปยังตาราง OOB ACC ถัดไป
             acc_table_index += 1
-            port_index = 1  # รีเซ็ต port_index เมื่อย้ายตาราง
+            port_index = 1
             if acc_table_index >= len(acc_names):
                 print("All OOB ACC tables are full.")
                 break
             selected_table_name = acc_names[acc_table_index]
-        else:
-            # ถ้าพอร์ตเพียงพอ ให้เพิ่มข้อมูลช่วง 23U-34U ลงในตารางปัจจุบัน
-            for device_name, unit in devices_23_34U:
+
+            for device_name, unit in devices_22_34U:
                 if device_name:
                     cur.execute(f"""
                         UPDATE {selected_table_name}
                         SET device_names = %s
                         WHERE port_id = %s;
                     """, (device_name, port_index))
-                    port_index += 1           
+                    port_index += 1
+
+    
+
+
+
+#llllllllllllllllllllllllllllllllllllllllllll
+    zone_to_oob_acc = {}
+
+    # ตรวจสอบข้อมูลใน acc_names เพื่อหาตารางที่มี zone เดียวกัน
+    for selected_table_name in acc_names:
+        # ดึงชื่อ device_names ค่าสุดท้ายจากตาราง oob_acc
+        cur.execute(f"""
+            SELECT device_names
+            FROM {selected_table_name}
+            WHERE device_names IS NOT NULL
+            ORDER BY port_id DESC LIMIT 1;
+        """)
+        last_device_name = cur.fetchone()
+
+        if last_device_name:
+            last_device_name = last_device_name[0]
+            #print(f"Last device name in {selected_table_name}: {last_device_name}")
+
+            # หาค่าพยัญชนะตัวสุดท้ายที่บ่งบอก zone (เช่น 50M หมายถึง M)
+            position_50 = last_device_name.find("50")
+            if position_50 != -1 and position_50 + 2 < len(last_device_name):
+                # ดึงตัวอักษรที่อยู่ถัดจาก "50"
+                zone_letter = last_device_name[position_50 + 2]
+                #print(f"Zone letter: {zone_letter}")
+
+                # ถ้ามีตารางที่มี zone เดียวกัน เก็บไว้ใน zone_to_oob_acc
+                if zone_letter in zone_to_oob_acc:
+                    zone_to_oob_acc[zone_letter].append(selected_table_name)
+                else:
+                    zone_to_oob_acc[zone_letter] = [selected_table_name]
+
+                #print(zone_to_oob_acc)
+
+#RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR
+    # สำหรับแต่ละ zone ที่มีตารางมากกว่า 1 ตาราง
+    odd_devices = []
+    even_devices = []
+    for zone_letter, oob_acc_tables in zone_to_oob_acc.items():
+        
+        if len(oob_acc_tables) == 1:
+            cur.execute("""
+                SELECT device_names, result_type
+                FROM device_phycon
+                WHERE result_type = %s OR result_type = %s
+                ;
+            """, (f"M&S Leaf {zone_letter}", f"SRV Leaf {zone_letter}"))
            
-           
-           
-            # เมื่อใส่ข้อมูล 23U-34U ในตารางถัดไปแล้วค่อยนับ rack_count += 1
+            ms_srv_devices = cur.fetchall()
+            m_s_leaf = []
+            srv_leaf = []
+            m_s_leaf_sort = []
+            srv_leaf_sort = []
+
+            for device_name, result_type in ms_srv_devices:
+                if f'm&s leaf {zone_letter.lower()}' in result_type.lower():
+                    m_s_leaf.append(device_name)
+                    #m_s_leaf_sort.sort(reverse=True)
+                    m_s_leaf_sort = sorted(m_s_leaf, key=lambda x: (x.split('-')[3], x.split('-')[-1]), reverse=True)  # เรียงตาม U และ M&S หมายเลข
+                    #print('msleaf',m_s_leaf)
+                    #print('m_s_leaf_sort',m_s_leaf_sort)
+                    #print('ms',m_s_leaf_devices[0])
+                
+                elif f'srv leaf {zone_letter.lower()}' in result_type.lower():
+                    srv_leaf.append(device_name)
+                    #srv_leaf_sort.sort(reverse=True)
+                    srv_leaf_sort = sorted(srv_leaf, key=lambda x: (x.split('-')[3], x.split('-')[-1]), reverse=True)  # เรียงตาม U และ SRV หมายเลข
+                    #print('srv', srv_leaf_devices[0])
+            port = 46
+            for device_name in srv_leaf_sort + m_s_leaf_sort :
+                if port < 41:
+                    break  # ไม่ให้ต่ำกว่าพอร์ต 41
+                oob_table_name = oob_acc_tables[0]
+                cur.execute(f"""
+                    UPDATE {oob_table_name}
+                    SET device_names = %s
+                    WHERE port_id = %s;
+                """, (device_name, port))
+                port -= 1
+
+
+
+
+        elif len(oob_acc_tables) == 2:  # ถ้ามีสองตารางที่มีโซนเดียวกัน
+            # รวบรวมผลลัพธ์ที่ตรงกันใน device_phycon จาก zone นี้
+            cur.execute("""
+                SELECT device_names, result_type
+                FROM device_phycon
+                WHERE result_type = 'OOB AGG' OR SUBSTRING(device_names FROM POSITION('50' IN device_names) + 2 FOR 1) = %s
+                ;
+            """, (zone_letter,))
+            matching_devices = cur.fetchall()
+            #print(matching_devices)
+            m_s_leaf_devices = []
+            srv_leaf_devices = []
+            oob_agg_devices = []
+            m_s_leaf_even = []
+            m_s_leaf_odd = []
+            srv_leaf_even = []
+            srv_leaf_odd = []
+            oob_agg_even = []
+            oob_agg_odd = []
+
+        # แยกอุปกรณ์เป็น odd_devices และ even_devices
+            for device_name, result_type in matching_devices:
+                if f'm&s leaf {zone_letter.lower()}' in result_type.lower():
+                    m_s_leaf_devices.append(device_name)
+                    #print('ms',m_s_leaf_devices[0])
+                
+                elif f'srv leaf {zone_letter.lower()}' in result_type.lower():
+                    srv_leaf_devices.append(device_name)
+                    #print('srv', srv_leaf_devices[0])
+
+                elif f'oob agg' in result_type.lower():
+                    oob_agg_devices.append(device_name)
+                    #print('agg', oob_agg_devices[0])
+                
+
+
+                if int(device_name[-1]) % 2 == 0:  # เช็คตัวเลขสุดท้ายว่าเป็นคู่หรือคี่
+                    even_devices.append(device_name)
+                else:
+                    odd_devices.append(device_name)
+
             
-        rack_count += 1
+            m_s_leaf_devices.sort(reverse=True)
+            #srv_leaf_devices.sort(reverse=True)
+            
+            
+            # อัปเดตข้อมูลในตารางแรกด้วยเลขคี่
+            first_table = oob_acc_tables[0]
+            second_table = oob_acc_tables[1]
+
+            # แยก m&s leaf และ srv leaf เป็นเลขคี่และเลขคู่
+            odd_m_s_leaf_devices = [device_name for device_name in m_s_leaf_devices if int(device_name[-1]) % 2 != 0]
+            even_m_s_leaf_devices = [device_name for device_name in m_s_leaf_devices if int(device_name[-1]) % 2 == 0]
+
+            odd_srv_leaf_devices = [device_name for device_name in srv_leaf_devices if int(device_name[-1]) % 2 != 0]
+            even_srv_leaf_devices = [device_name for device_name in srv_leaf_devices if int(device_name[-1]) % 2 == 0]
+
+            # อัปเดต odd_m_s_leaf_devices และ odd_srv_leaf_devices ลงใน first_table
+            port = 46
+            for device_name in odd_srv_leaf_devices + odd_m_s_leaf_devices:
+                if port < 41:
+                    break  # ไม่ให้ต่ำกว่าพอร์ต 41
+                cur.execute(f"""
+                    UPDATE {first_table}
+                    SET device_names = %s
+                    WHERE port_id = %s;
+                """, (device_name, port))
+                port -= 1
+
+            # อัปเดต even_m_s_leaf_devices และ even_srv_leaf_devices ลงใน second_table
+            port = 46
+            for device_name in even_srv_leaf_devices + even_m_s_leaf_devices:
+                if port < 41:
+                    break  # ไม่ให้ต่ำกว่าพอร์ต 41
+                cur.execute(f"""
+                    UPDATE {second_table}
+                    SET device_names = %s
+                    WHERE port_id = %s;
+                """, (device_name, port))
+                port -= 1
 
 
+            # อัปเดต odd_devices ในตารางแรกเริ่มที่พอร์ต 41
+            port = 47
+            for table_name in acc_names:
+                # ตรวจสอบว่าเป็นตาราง oob_acc หรือไม่
+                if 'oob_acc' not in table_name:
+                    continue
+                
+                # วนซ้ำเพื่อเพิ่มข้อมูลในพอร์ต 47 และ 48
+                for device_name in oob_agg_devices:
+                    if port < 47 or port > 48:
+                        continue  # ทำเฉพาะพอร์ต 47 และ 48
 
-##########################################################
- 
+                    # อัปเดตข้อมูลในตาราง oob_acc ที่กำหนดในพอร์ต 47 และ 48
+                    cur.execute(f"""
+                        UPDATE {table_name}
+                        SET device_names = %s
+                        WHERE port_id = %s;
+                    """, (device_name, port))
+
+                    # อัปเดตพอร์ตถัดไป
+                    port += 1
+
+            # หากครบพอร์ต 48 ให้วนกลับไปพอร์ต 47 สำหรับตารางถัดไป
+                    if port > 48:
+                        port = 47
+
+            #print(f"Updated {first_table} with m&s leaf, srv leaf, odd devices, and oob agg.")
+            #print(f"Updated {second_table} with even devices and oob agg.")
+
+
     # Commit การเปลี่ยนแปลงและปิดการเชื่อมต่อ
     conn.commit()
     print('Data inserted into OOB ACC tables.')
     cur.close()
     conn.close()
+
+
+def update_rack_position_in_oob_acc(acc_names):
+    conn = psycopg2.connect(DATABASE_URL)
+    cur = conn.cursor()
+
+    # ดึงข้อมูล device_names และ rack_position จาก device_phycon
+    cur.execute("""
+        SELECT device_names, rack_position
+        FROM device_phycon;
+    """)
+    device_rack_data = cur.fetchall()
+
+    # วนลูปผ่าน acc_names เพื่ออัปเดตค่า rack_position ในตาราง oob_acc แต่ละตาราง
+    for table_name in acc_names:
+        if 'oob_acc' in table_name:  # ตรวจสอบเฉพาะตาราง oob_acc
+            for device_name, rack_position in device_rack_data:
+                # อัปเดต rack_position สำหรับ device_names ที่ตรงกัน
+                cur.execute(f"""
+                    UPDATE {table_name}
+                    SET rack_position = %s
+                    WHERE device_names = %s;
+                """, (rack_position, device_name))
+    
+    # Commit การเปลี่ยนแปลงและปิดการเชื่อมต่อ
+    conn.commit()
+    print("Rack positions updated in all OOB ACC tables.")
+    cur.close()
+    conn.close()
+
 
 
 
@@ -1153,10 +1354,70 @@ def create_leaf_tables():
     print('def: create_leaf_tables')
     return leaf_names
 
-def insert_data_to_ms_leaf (leaf_names):
 
+
+
+
+
+
+
+def insert_data_to_ms_leaf(leaf_names):
     conn = psycopg2.connect(DATABASE_URL)
     cur = conn.cursor()
+    
+    print(leaf_names)
+
+    for leaf_table in leaf_names:
+        if 'm_' in leaf_table:
+            zone_letter = 'M'
+            cur.execute("""
+                SELECT device_names, result_type
+                FROM device_phycon
+                WHERE SUBSTRING(device_names FROM POSITION('50' IN device_names) + 2 FOR 1) = %s
+                ;
+            """, (zone_letter,))
+            m_devices = cur.fetchall()
+            print(m_devices)
+
+            m_for_ms = []
+            m_for_srv = []
+            for device_name, result_type in m_devices:
+                cur.execute("SELECT type_hw FROM map_ms WHERE type_hw = %s;", (result_type,))
+                ms_match = cur.fetchone()
+                
+                # ถ้ามีการแมตช์ ให้เก็บข้อมูลใน m_for_ms
+                if ms_match:
+                    m_for_ms.append((device_name, result_type))
+            
+            for device_name, result_type in m_devices:
+                cur.execute("SELECT type_hw FROM map_srv WHERE type_hw = %s;", (result_type,))
+                ms_match = cur.fetchone()
+                
+                # ถ้ามีการแมตช์ ให้เก็บข้อมูลใน m_for_ms
+                if ms_match:
+                    m_for_srv.append((device_name, result_type))
+
+
+            print("M for MS Matches:", m_for_ms)
+            print("M for SRV Matches:", m_for_srv)
+
+
+
+
+
+
+
+    # บันทึกการเปลี่ยนแปลง
+    conn.commit()
+    cur.close()
+
+# ตัวอย่างการเรียกฟังก์ชัน insert_data_to_ms_leaf
+
+
+
+  
+
+
 
     
 
@@ -1195,10 +1456,11 @@ def homepage():
     acc_table_names = create_oob_acc_tables()
     print(acc_table_names)
     insert_data_to_oob_acc(acc_table_names)
+    update_rack_position_in_oob_acc(acc_table_names)
     #leaf
-    #create_leaf_tables()
-    #leaf_table_names = create_leaf_tables()
-    #insert_data_to_ms_leaf(leaf_table_names)
+    create_leaf_tables()
+    leaf_table_names = create_leaf_tables()
+    insert_data_to_ms_leaf(leaf_table_names)
     return render_template('home.html')    
 
 @app.route('/home')
