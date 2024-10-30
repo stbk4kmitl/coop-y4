@@ -1361,48 +1361,56 @@ def create_leaf_tables():
 
 
 
+
 def insert_data_to_ms_leaf(leaf_names):
     conn = psycopg2.connect(DATABASE_URL)
     cur = conn.cursor()
     
-    print(leaf_names)
+    m_for_ms = []
+    m_for_srv = []
 
-    for leaf_table in leaf_names:
-        if 'm_' in leaf_table:
-            zone_letter = 'M'
-            cur.execute("""
-                SELECT device_names, result_type
-                FROM device_phycon
-                WHERE SUBSTRING(device_names FROM POSITION('50' IN device_names) + 2 FOR 1) = %s
-                ;
-            """, (zone_letter,))
-            m_devices = cur.fetchall()
-            print(m_devices)
+    # ตรวจสอบว่ามี `_ms` ใน leaf_names หรือไม่
+    if any('_ms' in leaf_table for leaf_table in leaf_names):
+        zone_letter = 'M'
+        
+        # ดึงข้อมูลจาก device_phycon ที่ตรงกับ zone_letter เพียงครั้งเดียว
+        cur.execute("""
+            SELECT device_names, result_type
+            FROM device_phycon
+            WHERE SUBSTRING(device_names FROM POSITION('50' IN device_names) + 2 FOR 1) = %s;
+        """, (zone_letter,))
+        m_devices = cur.fetchall()
 
-            m_for_ms = []
-            m_for_srv = []
-            for device_name, result_type in m_devices:
-                cur.execute("SELECT type_hw FROM map_ms WHERE type_hw = %s;", (result_type,))
-                ms_match = cur.fetchone()
-                
-                # ถ้ามีการแมตช์ ให้เก็บข้อมูลใน m_for_ms
-                if ms_match:
-                    m_for_ms.append((device_name, result_type))
+        # ตรวจสอบทุกค่าใน m_devices เพียงครั้งเดียว
+        for device_name, result_type in m_devices:
+            # ตรวจสอบว่า result_type ตรงกับ type_hw ใน map_ms หรือไม่
+            cur.execute("SELECT type_hw FROM map_ms WHERE type_hw = %s;", (result_type,))
+            ms_match = cur.fetchone()
             
-            for device_name, result_type in m_devices:
-                cur.execute("SELECT type_hw FROM map_srv WHERE type_hw = %s;", (result_type,))
-                ms_match = cur.fetchone()
-                
-                # ถ้ามีการแมตช์ ให้เก็บข้อมูลใน m_for_ms
-                if ms_match:
-                    m_for_srv.append((device_name, result_type))
+            # ถ้ามีการแมตช์ ให้เก็บข้อมูลใน m_for_ms
+            if ms_match:
+                m_for_ms.append((device_name, result_type))
 
 
-            print("M for MS Matches:", m_for_ms)
-            print("M for SRV Matches:", m_for_srv)
+    if any('_srv' in leaf_table for leaf_table in leaf_names):
+        zone_letter = 'M'
+        
+        # ดึงข้อมูลจาก device_phycon ที่ตรงกับ zone_letter เพียงครั้งเดียว (ข้อมูลเดิมจาก m_devices)
+        for device_name, result_type in m_devices:
+            cur.execute("SELECT type_hw FROM map_srv WHERE type_hw = %s;", (result_type,))
+            srv_match = cur.fetchone()
+            if srv_match:
+                m_for_srv.append((device_name, result_type))
 
 
 
+    # แสดงผลลัพธ์ที่ได้
+    print("M for MS Matches:", m_for_ms)
+    print("M for SRV Matches:", m_for_srv)
+
+
+    #print("M for MS Matche: ", m_for_ms)
+    #print("M for SRV Matche: ", m_for_srv)
 
 
 

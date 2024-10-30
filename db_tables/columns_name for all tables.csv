@@ -1,0 +1,26 @@
+﻿brands,clusters,domains,nodes,positions_rst,positions_snk,positions_tyb,sites,units,,,
+brandid,clusterid,domainid,nodeid,r_positionsid,s_positionsid,t_positionsid,siteid,rackunitsid,,,
+brandname,clustername,domainname,nodename,r_positions,s_positions,t_positions,sitename,rackunits,,,
+brandname_m,clustername_m,domainname_mapping,nodename_m,r_positions_m,s_positions_m,t_positions_m,,,,,
+,,,,,,,,,,,
+mappingdevices,inputdata ,,,,,,,,,,
+deviceid,inputid,,,,,,,,,,
+device_names,site_input,,,,,,,,,,
+positions,domain_input,,,,,,,,,,
+units,brand_input,,CREATE TABLE clusters (,,,CREATE TABLE positions_rst (,,,,CREATE TABLE sites (,
+,cluster_input,,,"clusterid SERIAL PRIMARY KEY ,",,,"r_positionsid SERIAL PRIMARY KEY ,",,,,"siteid SERIAL PRIMARY KEY ,"
+,node_input,,,"clustername TEXT,",,,"r_positions TEXT,",,,,sitename VARCHAR(10)
+,rackposition_input,,,clustername_m VARCHAR(10),,,r_positions_m VARCHAR(10),,,);,
+,rackunit_input,,);,,,);,,,,,
+,,,,,,,,,,,
+,,,CREATE TABLE domains (,,,CREATE TABLE positions_snk (,,,,CREATE TABLE units (,
+,,,,"domainid SERIAL PRIMARY KEY ,",,,"s_positionsid SERIAL PRIMARY KEY ,",,,,"rackunitsid SERIAL PRIMARY KEY ,"
+,,,,"domainname TEXT,",,,"s_positions TEXT,",,,,rackunits VARCHAR(10)
+,,,,domainname_m VARCHAR(10),,,s_positions_m VARCHAR(10),,,);,
+,,,);,,,);,,,,,
+,,,,,,,,,,,
+,,,CREATE TABLE nodes (,,,CREATE TABLE positions_tyb (,,,,,
+,,,,"nodeid SERIAL PRIMARY KEY ,",,,"t_positionsid SERIAL PRIMARY KEY ,",,,,
+,,,,"nodename TEXT,",,,"t_positions TEXT,",,,,
+,,,,nodename_m VARCHAR(10),,,t_positiont_m VARCHAR(10),,,,
+,,,);,,,);,,,,,

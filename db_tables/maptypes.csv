@@ -1,0 +1,38 @@
+﻿typeid,typeresult,typenames1,typename2,typename3
+1,RH OCP Support ,SUP,,
+2,Server SDN-C,COM,SDNC,
+3,SDN Adapter ,COM,SDNADAPTER,
+4,Server BN EMS,COM,EMSSW,
+5,Server Splunk,COM,SPLUNK,
+6,Tapping,TAP,CTRL,
+7,NPBSW,TAP,NPBSW,
+8,Backup Storage,BAK,STORAGE,
+9,Server Backup,BAK,SERVER,
+10,Server VAScanner,COM,VASCAN,
+11,Server EMS FW,COM,EMSFW,
+12,FW-I,IFW,,
+13,FW4,FW4,,
+14,WAF-I,WAF,WAF-I,
+15,Splitter,ATP,SPLT,
+16,MAS SW,TAP,MASSW,
+17,M&S Leaf M,50M,LEF,M&S
+18,SRV Leaf M,50M,LEF,SRV
+19,RH APP Master S01,S01,MAS,
+20,RH Infra Logging S01,S01,INF,
+21,Server Workload S01,S01,WRK,
+22,RH OCP CEPH S01,S01,CEP,
+23,Server HSM S01,COM,HSM,
+24,Server Splunk,COM,SPLUNK,
+25,M&S Leaf S,50S,LEF,M&S
+26,SRV Leaf S,50S,LEF,SRV
+27,RH APP Master N01,N01,MAS,
+28,RH Infra Logging N01,N01,INF,
+29,Server Workload N01,N01,WRK,
+30,RH OCP CEPH N01,N01,CEP,
+31,M&S Leaf N01,50N,LEF,M&S
+32,SRV Leaf N01,50N,LEF,SRV
+33,OOB ACC,OOB,ACC,
+34,OOB AGG,OOB,AGG,
+35,M&S Spine,SPN,M&S,
+36,SRV Spine,SPN,SRV,
+37,DCGW,DCG,,

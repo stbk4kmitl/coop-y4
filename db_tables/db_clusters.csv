@@ -1,0 +1,30 @@
+1,Support Node 01,01
+2,OCP HUB Cluster 01,01
+3,UME R50s 01,01
+4,SDN 01,01
+5,BN EMS 01,01
+6,ZTE CI/CD 01,01
+7,Splunk HF 01,01
+8,H3C UniServer 01,01
+9,H3C TAP8000-CE54_Tapping 01,01
+10,Backup Storage 01,01
+11,Backup Server 01,01
+12,VAScanner 01,01
+13,KMS 01,01
+14,CA 01,01
+15,FW EMS 01,01
+16,FW 01,01
+17,Splitter 01,01
+18,SW-MGT 01,01
+19,OCP  Cluster 03,03
+20,HSM03,03
+21,SW-Secure 03,03
+22,OCP Cluster 02,02
+23,Splunk HF 02,02
+24,SW-Non Exposed 02,02
+25,SW-Non Exposed 03,03
+26,SW-OOB 01,01
+27,SW-Mng&Stor Spine 01,01
+28,SW-Service Spine 01,01
+29,DCGW 01,01
+30,SW-Secure 01,01

@@ -1,0 +1,5 @@
+﻿SDN Adapter,ens2f0,ens2f1
+Server SDN-C,ens2f0,ens2f1
+Server Workload S01,ens2f0,ens2f1
+Server HSM S01,ens2f0,ens2f1
+Server Workload N01,ens2f0,ens2f1
