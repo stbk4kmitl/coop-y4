@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, send_file
+from flask import Flask, render_template, request, redirect, url_for, send_file, jsonify
 import pandas as pd
 import os
 import io
@@ -415,7 +415,7 @@ def get_table_data(table_name):
         rows = []
     cur.close()
     conn.close()
-    print('def: get_table_data')
+    #print('def: get_table_data')
     return {'columns': columns, 'rows': rows}
   
 def create_oob_agg_tables():
@@ -1368,46 +1368,61 @@ def insert_data_to_ms_leaf(leaf_names):
     
     m_for_ms = []
     m_for_srv = []
+    s_for_ms = []
+    s_for_srv = []
+    n_for_ms = []
+    n_for_srv = []
 
-    # ตรวจสอบว่ามี `_ms` ใน leaf_names หรือไม่
-    if any('_ms' in leaf_table for leaf_table in leaf_names):
-        zone_letter = 'M'
-        
-        # ดึงข้อมูลจาก device_phycon ที่ตรงกับ zone_letter เพียงครั้งเดียว
+    # ฟังก์ชันตรวจสอบและเก็บข้อมูลตาม zone_letter และ type_hw
+    def fetch_and_store(zone_letter, ms_list, srv_list):
+        # ดึงข้อมูลจาก device_phycon ที่ตรงกับ zone_letter
         cur.execute("""
             SELECT device_names, result_type
             FROM device_phycon
             WHERE SUBSTRING(device_names FROM POSITION('50' IN device_names) + 2 FOR 1) = %s;
         """, (zone_letter,))
-        m_devices = cur.fetchall()
+        devices = cur.fetchall()
 
-        # ตรวจสอบทุกค่าใน m_devices เพียงครั้งเดียว
-        for device_name, result_type in m_devices:
-            # ตรวจสอบว่า result_type ตรงกับ type_hw ใน map_ms หรือไม่
-            cur.execute("SELECT type_hw FROM map_ms WHERE type_hw = %s;", (result_type,))
-            ms_match = cur.fetchone()
-            
-            # ถ้ามีการแมตช์ ให้เก็บข้อมูลใน m_for_ms
-            if ms_match:
-                m_for_ms.append((device_name, result_type))
+        # ตรวจสอบ _ms ใน leaf_names และเก็บข้อมูลใน ms_list
+        if any('_ms' in leaf_table for leaf_table in leaf_names):
+            for device_name, result_type in devices:
+                cur.execute("SELECT type_hw FROM map_ms WHERE type_hw = %s;", (result_type,))
+                ms_match = cur.fetchone()
+                if ms_match:
+                    ms_list.append((device_name, result_type))
 
+        # ตรวจสอบ _srv ใน leaf_names และเก็บข้อมูลใน srv_list
+        if any('_srv' in leaf_table for leaf_table in leaf_names):
+            for device_name, result_type in devices:
+                cur.execute("SELECT type_hw FROM map_srv WHERE type_hw = %s;", (result_type,))
+                srv_match = cur.fetchone()
+                if srv_match:
+                    srv_list.append((device_name, result_type))
 
-    if any('_srv' in leaf_table for leaf_table in leaf_names):
-        zone_letter = 'M'
-        
-        # ดึงข้อมูลจาก device_phycon ที่ตรงกับ zone_letter เพียงครั้งเดียว (ข้อมูลเดิมจาก m_devices)
-        for device_name, result_type in m_devices:
-            cur.execute("SELECT type_hw FROM map_srv WHERE type_hw = %s;", (result_type,))
-            srv_match = cur.fetchone()
-            if srv_match:
-                m_for_srv.append((device_name, result_type))
-
-
+    # เรียกใช้ฟังก์ชัน fetch_and_store สำหรับแต่ละ zone_letter
+    fetch_and_store('M', m_for_ms, m_for_srv)
+    fetch_and_store('S', s_for_ms, s_for_srv)
+    fetch_and_store('N', n_for_ms, n_for_srv)
 
     # แสดงผลลัพธ์ที่ได้
     print("M for MS Matches:", m_for_ms)
+    print('........................')
     print("M for SRV Matches:", m_for_srv)
+    print('........................')
+    print('........................')
+    print("S for MS Matches:", s_for_ms)
+    print('........................')
+    print("S for SRV Matches:", s_for_srv)
+    print('........................')
+    print('........................')
+    print("N for MS Matches:", n_for_ms)
+    print('........................')
+    print("N for SRV Matches:", n_for_srv)
+    print('........................')
+    print('........................')
 
+    
+    
 
     #print("M for MS Matche: ", m_for_ms)
     #print("M for SRV Matche: ", m_for_srv)
@@ -1486,6 +1501,62 @@ def racklayout():
             tables_data[table] = data
     
     return render_template('racklayout.html', tables_data=tables_data)
+
+
+@app.route('/update_data', methods=['POST'])
+@app.route('/update_data', methods=['POST'])
+def update_data():
+    conn = psycopg2.connect(DATABASE_URL)
+    cur = conn.cursor()
+    
+    # สร้างตาราง edit_log หากยังไม่มี
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS edit_log (
+            id SERIAL PRIMARY KEY,
+            table_name TEXT,
+            units TEXT,
+            original_value TEXT,
+            updated_value TEXT,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    """)
+    
+    data = request.json['updatedData']
+    print(data)
+    
+    # วนลูปเพื่อประมวลผลข้อมูลการเปลี่ยนแปลงสำหรับแต่ละเซลล์
+    for change in data:
+        table_name = change['table_name']         # ชื่อของตาราง เช่น snk_r1
+        units = change['units']                   # ค่า units เช่น 47U
+        original_value = change['original_value'] # ค่าเดิมของ device_names
+        updated_value = change['updated_value'].strip()  # ลบช่องว่างและบรรทัดใหม่ออกจาก updated_value
+         # ข้ามการอัปเดตเมื่อ original_value เป็น None และ updated_value เป็นค่าว่าง
+        if not (original_value == 'None' and updated_value == ""):
+            if original_value != updated_value:
+            # บันทึกการเปลี่ยนแปลงใน edit_log
+                cur.execute("""
+                    INSERT INTO edit_log (table_name, units, original_value, updated_value)
+                    VALUES (%s, %s, %s, %s);
+                """, (table_name, units, original_value, updated_value))
+
+                # อัปเดตข้อมูลในตารางหลักเฉพาะเมื่อมีการเปลี่ยนแปลงและ updated_value ไม่เป็น NULL หรือช่องว่าง
+                if updated_value and original_value != updated_value:
+                    query_update = f"""
+                        UPDATE {table_name}
+                        SET device_names = %s
+                        WHERE units = %s;
+                    """
+                    cur.execute(query_update, (updated_value, units))
+
+    # บันทึกการเปลี่ยนแปลงทั้งหมดและปิดการเชื่อมต่อ
+    conn.commit()
+    cur.close()
+    conn.close()
+    
+    return jsonify({"message": "บันทึกการเปลี่ยนแปลงสำเร็จ!"})
+
+
+
 
 @app.route('/export_excel')
 

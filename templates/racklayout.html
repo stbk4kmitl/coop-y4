@@ -32,29 +32,85 @@
         <button type="submit">Export to Excel</button>
     </form>
     <div class="table-container">
-    {% for table_name, data in tables_data|dictsort %}
-        <div class="table-item">
-            <h2>{{ table_name }}</h2>
-            <table>
-                <thead>
-                    <tr>
-                        {% for column in data.columns %}
-                            <th>{{ column }}</th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for row in data.rows %}
+        {% for table_name, data in tables_data|dictsort if '_r' in table_name or '_swr' in table_name %}
+            <div class="table-item">
+                <h2>{{ table_name }}</h2>
+                <table>
+                    <thead>
                         <tr>
-                            {% for cell in row %}
-                                <td>{{ cell if cell is not none else "" }}</td>
+                            {% for column in data.columns %}
+                                <th>{{ column }}</th>
                             {% endfor %}
                         </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% endfor %}
+                    </thead>
+                    <tbody>
+                        {% for row in data.rows %}
+                            <tr>
+                                {% for cell in row %}
+                                    <td contenteditable="true" 
+                                        data-original="{{ cell }}" 
+                                        data-table-name="{{ table_name }}" 
+                                        data-units="{{ row[0] }}">
+                                        {{ cell if cell is not none else "" }}
+                                    </td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endfor %}
     </div>
+    
+    <button id="saveButton" onclick="sendData()">บันทึกการเปลี่ยนแปลง</button> <!-- เพิ่ม id ให้ปุ่ม -->
+    
+    <script>
+        // ฟังก์ชันสำหรับรวบรวมข้อมูลที่ถูกแก้ไข
+        function collectData() {
+            const allData = [];
+            
+            // เลือกทุกเซลล์ที่สามารถแก้ไขได้
+            document.querySelectorAll('td[contenteditable="true"]').forEach(cell => {
+                const original = cell.getAttribute('data-original');
+                const updated = cell.textContent;
+                const tableName = cell.getAttribute('data-table-name');
+                const units = cell.getAttribute('data-units');
+                
+                // ถ้ามีการเปลี่ยนแปลงเท่านั้น
+                allData.push({
+                    table_name: tableName,
+                    units: units,
+                    original_value: original,
+                    updated_value: updated
+                });
+            });
+
+            return allData;
+        }
+    
+        // ฟังก์ชันส่งข้อมูลไปยังเซิร์ฟเวอร์
+        function sendData() {
+            const data = collectData();
+    
+            fetch('/update_data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ updatedData: data })
+            })
+            .then(response => response.json())
+            .then(result => {
+                alert(result.message);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    
+        // เรียกใช้ sendData เมื่อผู้ใช้คลิกปุ่มบันทึก
+        //document.getElementById('saveButton').addEventListener('click', sendData);
+    </script>
+    
 </body>
 </html>

@@ -1,4 +1,5 @@
-﻿RH OCP Support,ens1f0,ens2f0,ens1f1,ens2f1
+﻿type_hw,port_1,port_2,port_3,port_4
+RH OCP Support,ens1f0,ens2f0,ens1f1,ens2f1
 Server Backup,ens1f0,ens1f1,ens2f0,ens2f1
 Server VAScanner,ens1f0,ens2f0,ens1f1,ens2f1
 Server EMS FW,ens5f0,ens5f1,ens7f0,ens7f1
@@ -7,3 +8,12 @@ Backup Storage,HBA-0_10GE(iscsi)-1,HBA-1_10GE(iscsi)-1,"HBA-0_10GE(iscsi)-2
 ",HBA-1_10GE(iscsi)-2
 SDN Adapter,ens1f0,,ens1f1,
 Server SDN-C,ens1f0,,ens1f1,
+RH OCP CEPH S01,ens5f0,ens7f0,ens5f1,ens7f1
+RH APP Master S01,ens1f0,ens2f0,ens1f1,ens2f1
+RH Infra Logging S01,ens1f0,ens2f0,ens1f1,ens2f1
+Server Workload S01,ens1f0,,ens1f1,
+Server HSM S01,ens1f0,,ens1f1,
+RH OCP CEPH N01,ens5f0,ens7f0,ens5f1,ens7f1
+RH APP Master N01,ens1f0,ens2f0,ens1f1,ens2f1
+RH Infra Logging N01,ens1f0,ens2f0,ens1f1,ens2f1
+Server Workload N01,ens1f0,,ens1f1,
