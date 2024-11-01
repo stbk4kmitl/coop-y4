@@ -1,94 +1,216 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Created Tables</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rack Layout</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Fixed header */
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background-color: #f5f5f5;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        /* Title styling */
+        .header h1 {
+            font-size: 2em;
+            color: #333;
+            margin: 0;
+        }
+
+        /* Top buttons below the title */
+        .top-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .content {
+            margin-top: 120px; /* Adjust for the fixed header */
+            width: 100%;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            box-sizing: border-box;
+        }
+
         .table-container {
             display: flex;
-            flex-wrap: nowrap; /* Prevent line wrapping */
-            overflow-x: auto; /* Horizontal scrolling if content overflows */
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            width: 100%;
             white-space: nowrap;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
+
         .table-item {
-            margin-right: 20px; /* Space between tables */
+            margin-right: 20px;
         }
+
         table {
             border-collapse: collapse;
-            width: 100%;
+            width: 60%;
         }
+
         th, td {
             border: 1px solid #333;
             padding: 8px;
             text-align: left;
         }
+
         h2 {
             margin-top: 0;
+            text-align: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            color: #fff;
+            background-color: #008ED3;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0077a3;
+        }
+
+        #saveButton:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .highlight-SW {
+            background-color: orange;
+        }
+
+        .highlight-FT {
+            background-color: pink;
+        }
+
+        td[contenteditable="false"] {
+            background-color: #f0f0f0;
         }
     </style>
 </head>
 <body>
-    <h1>Created Tables</h1>
-    <form action="/export_excel" method="get">
-        <button type="submit">Export to Excel</button>
-    </form>
-    <div class="table-container">
-        {% for table_name, data in tables_data|dictsort if '_r' in table_name or '_swr' in table_name %}
-            <div class="table-item">
-                <h2>{{ table_name }}</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            {% for column in data.columns %}
-                                <th>{{ column }}</th>
-                            {% endfor %}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for row in data.rows %}
+    <!-- Fixed header with title and buttons -->
+    <div class="header">
+        <h1>Rack Layout</h1>
+        <div class="top-buttons">
+            <button id="editButton" onclick="enableEditing()">Edit</button>
+            <button id="saveButton" onclick="sendData()" disabled>Save</button>
+            <a href="/oob_agg">
+                <button>Show OOB</button>
+            </a>
+
+            <a href="/leaf">
+                <button>Show Leaf</button>
+            </a>
+
+            <form action="/export_excel" method="get" style="display: inline;">
+                <button type="submit">Export to Excel</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="table-container">
+            {% for table_name, data in tables_data|dictsort if '_r' in table_name or '_swr' in table_name %}
+                <div class="table-item">
+                    <h2>{{ table_name }}</h2>
+                    <table>
+                        <thead>
                             <tr>
-                                {% for cell in row %}
-                                    <td contenteditable="true" 
-                                        data-original="{{ cell }}" 
-                                        data-table-name="{{ table_name }}" 
-                                        data-units="{{ row[0] }}">
-                                        {{ cell if cell is not none else "" }}
-                                    </td>
+                                {% for column in data.columns %}
+                                    <th>{{ column }}</th>
                                 {% endfor %}
                             </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% endfor %}
+                        </thead>
+                        <tbody>
+                            {% for row in data.rows %}
+                                <tr>
+                                    {% for cell in row %}
+                                        <td contenteditable="false" 
+                                            data-original="{{ cell }}" 
+                                            data-table-name="{{ table_name }}" 
+                                            data-units="{{ row[0] }}">
+                                            {{ cell if cell is not none else "" }}
+                                        </td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endfor %}
+        </div>
     </div>
     
-    <button id="saveButton" onclick="sendData()">บันทึกการเปลี่ยนแปลง</button> <!-- เพิ่ม id ให้ปุ่ม -->
-    
     <script>
-        // ฟังก์ชันสำหรับรวบรวมข้อมูลที่ถูกแก้ไข
+        function enableEditing() {
+            document.querySelectorAll('td[contenteditable]').forEach(cell => {
+                cell.setAttribute('contenteditable', 'true');
+                cell.classList.add('editable');
+            });
+            document.getElementById('saveButton').disabled = false;
+            document.getElementById('editButton').disabled = true;
+        }
+
+        function highlightCells() {
+            const keywords = ['M&S', 'SRV', 'AGG', 'ACC'];
+            document.querySelectorAll('td[contenteditable="true"]').forEach(cell => {
+                const cellText = cell.textContent;
+                if (keywords.some(keyword => cellText.includes(keyword))) {
+                    cell.classList.add('highlight-SW');
+                }
+                if (cellText.includes('FT')) {
+                    cell.classList.add('highlight-FT');
+                }
+            });
+        }    
+        document.addEventListener('DOMContentLoaded', highlightCells);
+
         function collectData() {
             const allData = [];
-            
-            // เลือกทุกเซลล์ที่สามารถแก้ไขได้
             document.querySelectorAll('td[contenteditable="true"]').forEach(cell => {
                 const original = cell.getAttribute('data-original');
                 const updated = cell.textContent;
                 const tableName = cell.getAttribute('data-table-name');
                 const units = cell.getAttribute('data-units');
                 
-                // ถ้ามีการเปลี่ยนแปลงเท่านั้น
-                allData.push({
-                    table_name: tableName,
-                    units: units,
-                    original_value: original,
-                    updated_value: updated
-                });
+                if (original !== updated) {
+                    allData.push({
+                        table_name: tableName,
+                        units: units,
+                        original_value: original,
+                        updated_value: updated
+                    });
+                }
             });
-
             return allData;
         }
-    
-        // ฟังก์ชันส่งข้อมูลไปยังเซิร์ฟเวอร์
+
         function sendData() {
             const data = collectData();
     
@@ -102,15 +224,17 @@
             .then(response => response.json())
             .then(result => {
                 alert(result.message);
+                document.querySelectorAll('td[contenteditable]').forEach(cell => {
+                    cell.setAttribute('contenteditable', 'false');
+                    cell.classList.remove('editable');
+                });
+                document.getElementById('saveButton').disabled = true;
+                document.getElementById('editButton').disabled = false;
             })
             .catch(error => {
                 console.error('Error:', error);
             });
         }
-    
-        // เรียกใช้ sendData เมื่อผู้ใช้คลิกปุ่มบันทึก
-        //document.getElementById('saveButton').addEventListener('click', sendData);
     </script>
-    
 </body>
 </html>

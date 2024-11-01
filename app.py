@@ -307,6 +307,7 @@ def get_created_tables():
     """
     cur.execute(query)
     tables = [table[0] for table in cur.fetchall()]
+    
     cur.close()
     conn.close()
 
@@ -316,7 +317,8 @@ def get_created_tables():
 
     # เรียงลำดับชื่อเทเบิลตามตัวเลขในชื่อ เช่น rack_1, rack_2
     sorted_tables = sorted(tables, key=extract_number)
-    print('def: get_created_tables')
+    #print('def: get_created_tables')
+    
     return sorted_tables
 
 def hardware_each_rack():
@@ -823,6 +825,11 @@ def create_oob_agg_2(agg_names):
     print(f'{selected_table_name}')
     cur.close()
     conn.close()
+
+
+
+
+
 
 def create_oob_acc_tables():    
     conn = psycopg2.connect(DATABASE_URL)
@@ -1373,6 +1380,9 @@ def insert_data_to_ms_leaf(leaf_names):
     n_for_ms = []
     n_for_srv = []
 
+    # รายการ result_type ที่ต้องการเพิ่มค่า device_names ซ้ำ
+    duplicate_result_types = ['RH OCP Support', 'Server Backup', 'Server VAScanner', 'Server EMS FW']
+
     # ฟังก์ชันตรวจสอบและเก็บข้อมูลตาม zone_letter และ type_hw
     def fetch_and_store(zone_letter, ms_list, srv_list):
         # ดึงข้อมูลจาก device_phycon ที่ตรงกับ zone_letter
@@ -1389,7 +1399,10 @@ def insert_data_to_ms_leaf(leaf_names):
                 cur.execute("SELECT type_hw FROM map_ms WHERE type_hw = %s;", (result_type,))
                 ms_match = cur.fetchone()
                 if ms_match:
-                    ms_list.append((device_name, result_type))
+                    # ตรวจสอบเงื่อนไขสำหรับการเพิ่ม device_names ซ้ำ
+                    if result_type in duplicate_result_types:
+                        ms_list.append((device_name, result_type))  # เพิ่มครั้งแรก
+                    ms_list.append((device_name, result_type))  # เพิ่มครั้งที่สอง (หรือครั้งแรกหากไม่อยู่ใน duplicate_result_types)
 
         # ตรวจสอบ _srv ใน leaf_names และเก็บข้อมูลใน srv_list
         if any('_srv' in leaf_table for leaf_table in leaf_names):
@@ -1420,23 +1433,6 @@ def insert_data_to_ms_leaf(leaf_names):
     print("N for SRV Matches:", n_for_srv)
     print('........................')
     print('........................')
-
-    
-    
-
-    #print("M for MS Matche: ", m_for_ms)
-    #print("M for SRV Matche: ", m_for_srv)
-
-
-
-
-    # บันทึกการเปลี่ยนแปลง
-    conn.commit()
-    cur.close()
-
-# ตัวอย่างการเรียกฟังก์ชัน insert_data_to_ms_leaf
-
-
 
   
 
@@ -1470,20 +1466,8 @@ def homepage():
     check_inputfiles()
     mapping_data()
     hardware_each_rack () 
-    #oob_agg
-    agg_table_names = create_oob_agg_tables()
-    print(agg_table_names)
-    create_oob_agg_1(agg_table_names)
-    create_oob_agg_2(agg_table_names)
-    #oob_acc
-    acc_table_names = create_oob_acc_tables()
-    print(acc_table_names)
-    insert_data_to_oob_acc(acc_table_names)
-    update_rack_position_in_oob_acc(acc_table_names)
-    #leaf
-    create_leaf_tables()
-    leaf_table_names = create_leaf_tables()
-    insert_data_to_ms_leaf(leaf_table_names)
+    
+
     return render_template('home.html')    
 
 @app.route('/home')
@@ -1499,11 +1483,73 @@ def racklayout():
         data = get_table_data(table)
         if data['columns'] and data['rows']:
             tables_data[table] = data
-    
+            data['rows'] = sorted(data['rows'], key=lambda x: x[0], reverse=True)
+            tables_data[table] = data
     return render_template('racklayout.html', tables_data=tables_data)
 
 
-@app.route('/update_data', methods=['POST'])
+@app.route('/oob_agg')
+def oob_agg():
+    conn = psycopg2.connect(DATABASE_URL)
+    cur = conn.cursor()
+    
+
+    agg_table_names = create_oob_agg_tables()
+    print(agg_table_names)
+    create_oob_agg_1(agg_table_names)
+    create_oob_agg_2(agg_table_names)
+    
+    
+    #oob_acc
+    acc_table_names = create_oob_acc_tables()
+    print(acc_table_names)
+    insert_data_to_oob_acc(acc_table_names)
+    update_rack_position_in_oob_acc(acc_table_names)
+    
+    # ดึงข้อมูลจากฐานข้อมูล
+    cur.execute("""
+        SELECT table_name 
+        FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND (table_name LIKE '%_oob_agg_%' OR table_name LIKE '%_oob_acc_%')
+    """)
+    table_names = [row[0] for row in cur.fetchall()]  # เก็บรายชื่อตารางที่ตรงกับเงื่อนไข
+    
+    def sort_key(name):
+        # แยกประเภท (oob_agg หรือ oob_acc) และหมายเลขท้ายชื่อ
+        prefix, num = name.rsplit('_', 1)
+        num = int(num) if num.isdigit() else float('inf')  # ถ้าไม่มีหมายเลขให้จัดไปไว้ท้ายสุด
+        return (0 if 'oob_agg' in prefix else 1, num)
+
+    # เรียง table_names ตามกฎที่กำหนดไว้
+    sorted_table_names = sorted(table_names, key=sort_key)
+
+    # ขั้นตอนที่ 2: ดึงข้อมูลจากแต่ละตารางและเก็บข้อมูลใน `tables_data`
+    tables_data = {}
+    for table_name in sorted_table_names:
+        cur.execute(f"SELECT * FROM {table_name} ORDER BY port_id ")
+        rows = cur.fetchall()  # ดึงข้อมูลทุกแถวในตาราง
+        columns = [desc[0] for desc in cur.description]  # ดึงชื่อคอลัมน์
+        tables_data[table_name] = {'columns': columns, 'rows': rows}  # เก็บข้อมูลในรูปแบบ dict
+    
+    # ปิดการเชื่อมต่อฐานข้อมูล
+    cur.close()
+    conn.close()
+
+    return render_template('oob_agg.html', tables_data=tables_data)
+
+
+
+
+@app.route('/leaf')
+def leaf():
+    #leaf
+    create_leaf_tables()
+    leaf_table_names = create_leaf_tables()
+    insert_data_to_ms_leaf(leaf_table_names)
+
+    return render_template('leaf.html')
+
 @app.route('/update_data', methods=['POST'])
 def update_data():
     conn = psycopg2.connect(DATABASE_URL)
@@ -1559,10 +1605,9 @@ def update_data():
 
 
 @app.route('/export_excel')
-
 def export_excel():
     tables = get_created_tables()
-    tables_data = {'rack_swr': {}, 'oob_agg': {}}
+    tables_data = {'rack_swr': {}, 'oob_agg': {}, 'oob_acc': {}}
 
     # ดึงข้อมูลจากฐานข้อมูลใส่ใน tables_data
     for table in tables:
@@ -1572,6 +1617,8 @@ def export_excel():
                 tables_data['rack_swr'][table] = data
             elif 'oob_agg' in table:
                 tables_data['oob_agg'][table] = data
+            elif 'oob_acc' in table:
+                tables_data['oob_acc'][table] = data
 
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
@@ -1579,12 +1626,12 @@ def export_excel():
         border_format = writer.book.add_format({'border': 1})
 
         # เขียนข้อมูลลง Sheet ที่ 1 สำหรับตารางที่มี _r และ _swr โดยเรียงจากซ้ายไปขวา
-        sheet1 = writer.book.add_worksheet('Rack and SWR')
+        sheet1 = writer.book.add_worksheet('Rack Layout')
         start_col = 0
         sorted_rack_swr = sorted(tables_data['rack_swr'].items(), key=lambda x: x[0])
 
         for table_name, data in sorted_rack_swr:
-            df = pd.DataFrame(data['rows'], columns=data['columns'])
+            df = pd.DataFrame(data['rows'], columns=data['columns']).sort_values(by='units', ascending=False)
 
             # เขียนชื่อเทเบิลเป็นหัวข้อเหนือข้อมูล
             sheet1.write(0, start_col, table_name)
@@ -1598,31 +1645,71 @@ def export_excel():
                 for col_num, value in enumerate(row):
                     sheet1.write(row_num, start_col + col_num, value, border_format)
 
+            # ปรับความกว้างของคอลัมน์ให้พอดีกับความยาวของข้อความที่ยาวที่สุด
+            for col_num, column in enumerate(df.columns):
+                max_width = max([len(str(column))] + [len(str(val)) for val in df[column]])
+                sheet1.set_column(start_col + col_num, start_col + col_num, max_width + 2)
+
             # เพิ่มช่องว่างระหว่างตารางถัดไป
             start_col += len(df.columns) + 2
 
-        # เขียนข้อมูลลง Sheet ที่ 2 สำหรับตารางที่มี oob_agg โดยเรียงจากซ้ายไปขวา
-        sheet2 = writer.book.add_worksheet('OOB AGG')
-        start_col = 0
+        # เขียนข้อมูลลง Sheet ที่ 2 สำหรับ oob_agg จากซ้ายไปขวา และ oob_acc จากบนลงล่าง
+        sheet2 = writer.book.add_worksheet('OOB')
+        start_col = 0  # เริ่มต้นคอลัมน์สำหรับ oob_agg
+        start_row = 0  # เริ่มต้นแถวสำหรับ oob_acc
         sorted_oob_agg = sorted(tables_data['oob_agg'].items(), key=lambda x: x[0])
+        sorted_oob_acc = sorted(tables_data['oob_acc'].items(), key=lambda x: x[0])
 
+        # เขียน oob_agg จากซ้ายไปขวา
         for table_name, data in sorted_oob_agg:
-            df = pd.DataFrame(data['rows'], columns=data['columns'])
+            df = pd.DataFrame(data['rows'], columns=data['columns']).sort_values(by='port_id', ascending=False)
 
             # เขียนชื่อเทเบิลเป็นหัวข้อเหนือข้อมูล
-            sheet2.write(0, start_col, table_name)
+            sheet2.write(start_row, start_col, table_name)
 
             # เขียนชื่อคอลัมน์พร้อมเส้นขอบ
             for col_num, column_name in enumerate(df.columns):
-                sheet2.write(1, start_col + col_num, column_name, border_format)
+                sheet2.write(start_row + 1, start_col + col_num, column_name, border_format)
 
             # เขียนข้อมูล DataFrame เริ่มที่แถวที่ 2 พร้อมเส้นขอบ
-            for row_num, row in enumerate(df.values, start=2):
+            for row_num, row in enumerate(df.values, start=start_row + 2):
                 for col_num, value in enumerate(row):
                     sheet2.write(row_num, start_col + col_num, value, border_format)
 
+            # ปรับความกว้างของคอลัมน์ให้พอดีกับความยาวของข้อความที่ยาวที่สุด
+            for col_num, column in enumerate(df.columns):
+                max_width = max([len(str(column))] + [len(str(val)) for val in df[column]])
+                sheet2.set_column(start_col + col_num, start_col + col_num, max_width + 2)
+
             # เพิ่มช่องว่างระหว่างตารางถัดไป
             start_col += len(df.columns) + 2
+
+        # เขียน oob_acc จากบนลงล่าง ใต้ oob_agg
+        start_col = 0  # ย้ายกลับไปเริ่มที่คอลัมน์แรก
+        start_row += max(len(df) + 4, 6)  # ย้ายแถวถัดไปหลังจาก oob_agg
+
+        for table_name, data in sorted_oob_acc:
+            df = pd.DataFrame(data['rows'], columns=data['columns']).sort_values(by='port_id', ascending=False)
+
+            # เขียนชื่อเทเบิลเป็นหัวข้อเหนือข้อมูล
+            sheet2.write(start_row, start_col, table_name)
+
+            # เขียนชื่อคอลัมน์พร้อมเส้นขอบ
+            for col_num, column_name in enumerate(df.columns):
+                sheet2.write(start_row + 1, start_col + col_num, column_name, border_format)
+
+            # เขียนข้อมูล DataFrame เริ่มที่แถวที่ 2 พร้อมเส้นขอบ
+            for row_num, row in enumerate(df.values, start=start_row + 2):
+                for col_num, value in enumerate(row):
+                    sheet2.write(row_num, start_col + col_num, value, border_format)
+
+            # ปรับความกว้างของคอลัมน์ให้พอดีกับความยาวของข้อความที่ยาวที่สุด
+            for col_num, column in enumerate(df.columns):
+                max_width = max([len(str(column))] + [len(str(val)) for val in df[column]])
+                sheet2.set_column(start_col + col_num, start_col + col_num, max_width + 2)
+
+            # เพิ่มช่องว่างระหว่างตารางถัดไป
+            start_row += len(df) + 4
 
     output.seek(0)
     return send_file(output, as_attachment=True, download_name='rack_tables_with_borders.xlsx',

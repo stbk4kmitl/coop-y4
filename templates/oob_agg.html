@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OOB Switch</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Fixed header */
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background-color: #f5f5f5;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        /* Title styling */
+        .header h1 {
+            font-size: 2em;
+            color: #333;
+            margin: 0;
+        }
+
+        /* Top buttons below the title */
+        .top-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .content {
+            margin-top: 120px; /* Adjust for the fixed header */
+            width: 100%;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            box-sizing: border-box;
+        }
+
+        .table-container {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 10px;
+            width: 100%;
+            max-width: 100%;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-item {
+            margin-right: 20px;
+            background-color: #fff;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #333;
+            padding: 8px;
+            text-align: left;
+        }
+
+        h2 {
+            margin-top: 0;
+            text-align: center;
+            font-size: 1.2em;
+            color: #008ED3;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            color: #fff;
+            background-color: #008ED3;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0077a3;
+        }
+
+        /* Scroll buttons */
+        .scroll-button {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5em;
+            color: #008ED3;
+            background-color: #f5f5f5;
+            border: none;
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        #scroll-left {
+            left: 10px;
+        }
+
+        #scroll-right {
+            right: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Fixed header with title and buttons -->
+    <div class="header">
+        <h1>OOB Aggregated Data</h1>
+        <div class="top-buttons">
+            <a href="/"><button>Home</button></a>
+            <a href="/racklayout"><button>Show Rack Layout</button></a>
+            <form action="/export_excel" method="get" style="display: inline;">
+                <button type="submit">Export to Excel</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="table-container" id="tableContainer">
+            {% for table_name, data in tables_data.items() %}
+                <div class="table-item">
+                    <h2>{{ table_name }}</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                {% for column in data.columns %}
+                                    <th>{{ column }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in data.rows %}
+                                <tr>
+                                    {% for cell in row %}
+                                        <td>{{ cell if cell is not none else "" }}</td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <button class="scroll-button" id="scroll-left" onclick="scrollContainer(-300)">&#10094;</button>
+    <button class="scroll-button" id="scroll-right" onclick="scrollContainer(300)">&#10095;</button>
+
+    <script>
+        function scrollContainer(distance) {
+            const container = document.getElementById('tableContainer');
+            container.scrollBy({ left: distance, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
