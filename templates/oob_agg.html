@@ -62,7 +62,7 @@
         }
 
         .table-item {
-            margin-right: 20px;
+            margin-right: 50px;
             background-color: #fff;
             padding: 10px;
             border: 1px solid #ddd;
@@ -103,6 +103,15 @@
             background-color: #0077a3;
         }
 
+        /* Red style for the Delete Files button */
+        .delete-form button {
+            background-color: #D9534F;
+        }
+
+        .delete-form button:hover {
+            background-color: #C9302C;
+        }
+
         /* Scroll buttons */
         .scroll-button {
             position: fixed;
@@ -129,12 +138,16 @@
 
     <!-- Fixed header with title and buttons -->
     <div class="header">
-        <h1>OOB Aggregated Data</h1>
+        <h1>OOB Data</h1>
         <div class="top-buttons">
             <a href="/"><button>Home</button></a>
             <a href="/racklayout"><button>Show Rack Layout</button></a>
             <form action="/export_excel" method="get" style="display: inline;">
                 <button type="submit">Export to Excel</button>
+            </form>
+
+            <form action="/delete_files" method="post" class="delete-form">
+                <button type="submit">Delete Files</button>
             </form>
         </div>
     </div>

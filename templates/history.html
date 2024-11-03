@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit History</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Fixed header */
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background-color: #f5f5f5;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        /* Title styling */
+        .header h1 {
+            font-size: 2em;
+            color: #333;
+            margin: 0;
+        }
+
+        /* Top buttons below the title */
+        .top-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .content {
+            margin-top: 120px; /* Adjust for the fixed header */
+            width: 100%;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            box-sizing: border-box;
+        }
+
+        .table-container {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            width: 90%; /* Increased width to 90% */
+            white-space: nowrap;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-item {
+            width: 100%; /* Make the table occupy full container width */
+            margin-right: 50px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%; /* Increased width to fill the container */
+            margin: 0 auto;
+        }
+
+        th, td {
+            border: 1px solid #333;
+            padding: 12px; /* Increased padding for larger cells */
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            color: #fff;
+            background-color: #008ED3;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0077a3;
+        }
+
+        #saveButton:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .highlight-SW {
+            background-color: orange;
+        }
+
+        .highlight-FT {
+            background-color: pink;
+        }
+
+        td[contenteditable="false"] {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Edit History Log</h1>
+    </div>
+
+    <div class="content">
+        <div class="table-container">
+            <div class="table-item">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Table Name</th>
+                            <th>Units</th>
+                            <th>Original Value</th>
+                            <th>Updated Value</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in edit_log_data %}
+                            <tr>
+                                <td>{{ log[0] }}</td>
+                                <td>{{ log[1] }}</td>
+                                <td>{{ log[2] }}</td>
+                                <td>{{ log[3] }}</td>
+                                <td>{{ log[4] }}</td>
+                                <td>{{ log[5] }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

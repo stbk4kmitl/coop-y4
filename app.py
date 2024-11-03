@@ -330,7 +330,7 @@ def hardware_each_rack():
     created_tables = []
 
     # Generate all unit values (01U to 47U) in Python (no need for temp table)
-    all_units = [f"{str(i).zfill(2)}U" for i in range(1, 48)] 
+    all_units = [f"{str(i).zfill(2)}U" for i in range(1, 35)] 
 
     for row in query_data:
         inputid, site_input = row
@@ -1267,180 +1267,59 @@ def update_rack_position_in_oob_acc(acc_names):
 
 
 
-
-
-
-
-def create_leaf_tables():
+@app.route('/delete_files', methods=['POST'])
+def delete_files():
     conn = psycopg2.connect(DATABASE_URL)
     cur = conn.cursor()
+    
+    # Truncate tables and restart IDENTITY
+    truncate_commands = [
+        "TRUNCATE TABLE inputdata RESTART IDENTITY",
+        "TRUNCATE TABLE mappingdevices RESTART IDENTITY",
+        "TRUNCATE TABLE device_phycon RESTART IDENTITY"
+    ]
+    for command in truncate_commands:
+        cur.execute(command)
 
-    # ขั้นตอนที่ 1: ดึงข้อมูล result_type และ device_names จากตาราง device_phycon ที่ตรงกับประเภท M&S และ SRV Leaf
-    cur.execute("""
-        SELECT result_type, device_names 
-        FROM device_phycon 
-        WHERE result_type IN (
-            'M&S Leaf M', 'M&S Leaf S', 'M&S Leaf N01', 
-            'SRV Leaf M', 'SRV Leaf S', 'SRV Leaf N01'
-        );
-    """)
-    leaf_data = cur.fetchall()  # ดึงข้อมูลทั้งหมด
-    leaf_names = []
-    device_counters = {}
+    # Check if each table exists before dropping it
+    tables_to_drop = [
+        'snk_r1', 'snk_r2', 'snk_r3', 'snk_r4', 'snk_r5', 'snk_r6', 'snk_r7',
+        'snk_swr1', 'snk_swr2', 'snk_swr3', 'snk_swr4', 'snk_swr5', 'snk_swr6',
+        'snk_oob_agg_1', 'snk_oob_agg_2',
+        'snk_oob_acc_1', 'snk_oob_acc_2', 'snk_oob_acc_3', 'snk_oob_acc_4'
+    ]
 
-    # ขั้นตอนที่ 2: สร้างตารางตาม result_type และ device_names พร้อม prefix
-    for result_type, device_name in leaf_data:
-        if 'SNK' in device_name:
-            prefix = 'snk'
-        elif 'RST' in device_name:
-            prefix = 'rst'
-        elif 'TYB' in device_name:
-            prefix = 'tyb'
-        else:
-            prefix = 'default'
-
-        # แยกประเภท M&S และ SRV ตาม Leaf
-        if 'M&S Leaf M' in result_type:
-            suffix = 'm_ms'
-        elif 'M&S Leaf S' in result_type:
-            suffix = 's_ms'
-        elif 'M&S Leaf N01' in result_type:
-            suffix = 'n_ms'
-        elif 'SRV Leaf M' in result_type:
-            suffix = 'm_srv'
-        elif 'SRV Leaf S' in result_type:
-            suffix = 's_srv'
-        elif 'SRV Leaf N01' in result_type:
-            suffix = 'n_srv'
-        else:
-            suffix = 'default'
-
-        # ตรวจสอบและเพิ่มตัวนับสำหรับแต่ละประเภท
-        key = f"{prefix}_{suffix}"
-        if key not in device_counters:
-            device_counters[key] = 1
-        else:
-            device_counters[key] += 1
-
-        # สร้างชื่อตารางตามตัวนับ
-        table_name = f"{key}_leaf_{str(device_counters[key]).zfill(2)}"
-        leaf_names.append(table_name)
-
-        # สร้างตารางในฐานข้อมูล
+    for table in tables_to_drop:
+        # Check if table exists before dropping it
         cur.execute(f"""
-            CREATE TABLE IF NOT EXISTS {table_name} (
-                port_id SERIAL PRIMARY KEY,
-                port TEXT,
-                device_names TEXT,
-                rack_position TEXT,
-                connections TEXT
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_name = %s
             );
-        """)
-        print(f'Created table: {table_name}')
+        """, (table,))
+        table_exists = cur.fetchone()[0]
+        
+        if table_exists:
+            cur.execute(f"DROP TABLE {table} CASCADE")
 
-    conn.commit()
 
-    # ขั้นตอนที่ 3: เพิ่มข้อมูล 52 แถวในแต่ละตาราง
-    for table_name in leaf_names:
-        # ลูปเพื่อแทรกข้อมูล 52 แถว
-        for i in range(1, 57):  # Loop ตั้งแต่ 1 ถึง 52
-            cur.execute(f"""
-                INSERT INTO {table_name} (port) VALUES (NULL);
-            """)
+        temp_folder = app.config['UPLOAD_FOLDER']
+    for filename in os.listdir(temp_folder):
+        file_path = os.path.join(temp_folder, filename)
+        try:
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+        except Exception as e:
+            print(f"Error deleting file {file_path}: {e}")
 
-        # ลูปเพื่ออัปเดตข้อมูล port ในแต่ละแถว
-        for i in range(1, 57):
-            cur.execute(f"""
-                UPDATE {table_name}
-                SET port = '0/1/1/' || {i}
-                WHERE port_id = {i};
-            """)
 
+    # Commit the changes and close the connection
     conn.commit()
     cur.close()
-    print('def: create_leaf_tables')
-    return leaf_names
-
-
-
-
-
-
-
-
-
-def insert_data_to_ms_leaf(leaf_names):
-    conn = psycopg2.connect(DATABASE_URL)
-    cur = conn.cursor()
+    conn.close()
     
-    m_for_ms = []
-    m_for_srv = []
-    s_for_ms = []
-    s_for_srv = []
-    n_for_ms = []
-    n_for_srv = []
-
-    # รายการ result_type ที่ต้องการเพิ่มค่า device_names ซ้ำ
-    duplicate_result_types = ['RH OCP Support', 'Server Backup', 'Server VAScanner', 'Server EMS FW']
-
-    # ฟังก์ชันตรวจสอบและเก็บข้อมูลตาม zone_letter และ type_hw
-    def fetch_and_store(zone_letter, ms_list, srv_list):
-        # ดึงข้อมูลจาก device_phycon ที่ตรงกับ zone_letter
-        cur.execute("""
-            SELECT device_names, result_type
-            FROM device_phycon
-            WHERE SUBSTRING(device_names FROM POSITION('50' IN device_names) + 2 FOR 1) = %s;
-        """, (zone_letter,))
-        devices = cur.fetchall()
-
-        # ตรวจสอบ _ms ใน leaf_names และเก็บข้อมูลใน ms_list
-        if any('_ms' in leaf_table for leaf_table in leaf_names):
-            for device_name, result_type in devices:
-                cur.execute("SELECT type_hw FROM map_ms WHERE type_hw = %s;", (result_type,))
-                ms_match = cur.fetchone()
-                if ms_match:
-                    # ตรวจสอบเงื่อนไขสำหรับการเพิ่ม device_names ซ้ำ
-                    if result_type in duplicate_result_types:
-                        ms_list.append((device_name, result_type))  # เพิ่มครั้งแรก
-                    ms_list.append((device_name, result_type))  # เพิ่มครั้งที่สอง (หรือครั้งแรกหากไม่อยู่ใน duplicate_result_types)
-
-        # ตรวจสอบ _srv ใน leaf_names และเก็บข้อมูลใน srv_list
-        if any('_srv' in leaf_table for leaf_table in leaf_names):
-            for device_name, result_type in devices:
-                cur.execute("SELECT type_hw FROM map_srv WHERE type_hw = %s;", (result_type,))
-                srv_match = cur.fetchone()
-                if srv_match:
-                    srv_list.append((device_name, result_type))
-
-    # เรียกใช้ฟังก์ชัน fetch_and_store สำหรับแต่ละ zone_letter
-    fetch_and_store('M', m_for_ms, m_for_srv)
-    fetch_and_store('S', s_for_ms, s_for_srv)
-    fetch_and_store('N', n_for_ms, n_for_srv)
-
-    # แสดงผลลัพธ์ที่ได้
-    print("M for MS Matches:", m_for_ms)
-    print('........................')
-    print("M for SRV Matches:", m_for_srv)
-    print('........................')
-    print('........................')
-    print("S for MS Matches:", s_for_ms)
-    print('........................')
-    print("S for SRV Matches:", s_for_srv)
-    print('........................')
-    print('........................')
-    print("N for MS Matches:", n_for_ms)
-    print('........................')
-    print("N for SRV Matches:", n_for_srv)
-    print('........................')
-    print('........................')
-
-  
-
-
-
-    
-
-
+    # Redirect to home page or another page after completion
+    return redirect(url_for('home'))
 
 
 
@@ -1463,10 +1342,12 @@ def export_to_excel():
 #------------------------------------------------------------------------------------
 @app.route('/', methods=['GET', 'POST'])
 def homepage():
-    check_inputfiles()
-    mapping_data()
-    hardware_each_rack () 
-    
+
+    if not check_temp_files(app.config['UPLOAD_FOLDER']):
+        check_inputfiles()
+        mapping_data()
+        hardware_each_rack () 
+        
 
     return render_template('home.html')    
 
@@ -1541,14 +1422,7 @@ def oob_agg():
 
 
 
-@app.route('/leaf')
-def leaf():
-    #leaf
-    create_leaf_tables()
-    leaf_table_names = create_leaf_tables()
-    insert_data_to_ms_leaf(leaf_table_names)
 
-    return render_template('leaf.html')
 
 @app.route('/update_data', methods=['POST'])
 def update_data():
@@ -1601,6 +1475,19 @@ def update_data():
     
     return jsonify({"message": "บันทึกการเปลี่ยนแปลงสำเร็จ!"})
 
+@app.route('/history')
+def history():
+    conn = psycopg2.connect(DATABASE_URL)
+    cur = conn.cursor()
+    
+    # Query data from edit_log
+    cur.execute("SELECT id, table_name, units, original_value, updated_value, timestamp FROM edit_log ORDER BY timestamp DESC;")
+    edit_log_data = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    # Pass data to the history.html template
+    return render_template('history.html', edit_log_data=edit_log_data)
 
 
 
@@ -1662,7 +1549,7 @@ def export_excel():
 
         # เขียน oob_agg จากซ้ายไปขวา
         for table_name, data in sorted_oob_agg:
-            df = pd.DataFrame(data['rows'], columns=data['columns']).sort_values(by='port_id', ascending=False)
+            df = pd.DataFrame(data['rows'], columns=data['columns']).sort_values(by='port_id', ascending=True)
 
             # เขียนชื่อเทเบิลเป็นหัวข้อเหนือข้อมูล
             sheet2.write(start_row, start_col, table_name)
@@ -1689,7 +1576,7 @@ def export_excel():
         start_row += max(len(df) + 4, 6)  # ย้ายแถวถัดไปหลังจาก oob_agg
 
         for table_name, data in sorted_oob_acc:
-            df = pd.DataFrame(data['rows'], columns=data['columns']).sort_values(by='port_id', ascending=False)
+            df = pd.DataFrame(data['rows'], columns=data['columns']).sort_values(by='port_id', ascending=True)
 
             # เขียนชื่อเทเบิลเป็นหัวข้อเหนือข้อมูล
             sheet2.write(start_row, start_col, table_name)
@@ -1712,7 +1599,7 @@ def export_excel():
             start_row += len(df) + 4
 
     output.seek(0)
-    return send_file(output, as_attachment=True, download_name='rack_tables_with_borders.xlsx',
+    return send_file(output, as_attachment=True, download_name='LLD Files.xlsx',
                      mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
 #--------------------------------------------------------------------------------------

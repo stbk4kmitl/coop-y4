@@ -61,12 +61,13 @@
         }
 
         .table-item {
-            margin-right: 20px;
+            width: 1000px;
+            margin-right: 50px;
         }
 
         table {
             border-collapse: collapse;
-            width: 60%;
+            width: 500px;
         }
 
         th, td {
@@ -100,12 +101,13 @@
             cursor: not-allowed;
         }
 
-        .highlight-SW {
-            background-color: orange;
+        /* Red style for the Delete Files button */
+        .delete-form button {
+            background-color: #D9534F;
         }
 
-        .highlight-FT {
-            background-color: pink;
+        .delete-form button:hover {
+            background-color: #C9302C;
         }
 
         td[contenteditable="false"] {
@@ -124,12 +126,15 @@
                 <button>Show OOB</button>
             </a>
 
-            <a href="/leaf">
-                <button>Show Leaf</button>
+            <a href="/history">
+                <button>History</button>
             </a>
-
             <form action="/export_excel" method="get" style="display: inline;">
                 <button type="submit">Export to Excel</button>
+            </form>
+
+            <form action="/delete_files" method="post" class="delete-form">
+                <button type="submit">Delete Files</button>
             </form>
         </div>
     </div>
