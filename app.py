@@ -1452,7 +1452,7 @@ def update_data():
         updated_value = change['updated_value'].strip()  # ลบช่องว่างและบรรทัดใหม่ออกจาก updated_value
          # ข้ามการอัปเดตเมื่อ original_value เป็น None และ updated_value เป็นค่าว่าง
         #if not (original_value == 'None' and updated_value == ''):
-        if original_value != updated_value:
+        if original_value != updated_value and not (original_value == 'None' and updated_value == ""):
             cur.execute("""
                 INSERT INTO edit_log (table_name, units, original_value, updated_value)
                 VALUES (%s, %s, %s, %s);
@@ -1482,6 +1482,7 @@ def update_data():
     conn.close()
     
     return jsonify({"message": "บันทึกการเปลี่ยนแปลงสำเร็จ!"})
+
 
 @app.route('/history')
 def history():
