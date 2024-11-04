@@ -1451,22 +1451,30 @@ def update_data():
         original_value = change['original_value'] # ค่าเดิมของ device_names
         updated_value = change['updated_value'].strip()  # ลบช่องว่างและบรรทัดใหม่ออกจาก updated_value
          # ข้ามการอัปเดตเมื่อ original_value เป็น None และ updated_value เป็นค่าว่าง
-        if not (original_value == 'None' and updated_value == ""):
-            if original_value != updated_value:
-            # บันทึกการเปลี่ยนแปลงใน edit_log
-                cur.execute("""
-                    INSERT INTO edit_log (table_name, units, original_value, updated_value)
-                    VALUES (%s, %s, %s, %s);
-                """, (table_name, units, original_value, updated_value))
+        #if not (original_value == 'None' and updated_value == ''):
+        if original_value != updated_value:
+            cur.execute("""
+                INSERT INTO edit_log (table_name, units, original_value, updated_value)
+                VALUES (%s, %s, %s, %s);
+            """, (table_name, units, original_value, updated_value))
 
-                # อัปเดตข้อมูลในตารางหลักเฉพาะเมื่อมีการเปลี่ยนแปลงและ updated_value ไม่เป็น NULL หรือช่องว่าง
-                if updated_value and original_value != updated_value:
-                    query_update = f"""
-                        UPDATE {table_name}
-                        SET device_names = %s
-                        WHERE units = %s;
-                    """
-                    cur.execute(query_update, (updated_value, units))
+            # อัปเดตข้อมูลในตารางหลัก:
+            # ถ้า updated_value เป็นค่าว่าง ให้ตั้งค่า device_names เป็น NULL
+            if updated_value == "":
+                query_update = f"""
+                    UPDATE {table_name}
+                    SET device_names = NULL
+                    WHERE units = %s;
+                """
+                cur.execute(query_update, (units,))
+            else:
+                # ถ้ามีค่าใน updated_value ให้อัปเดตตามค่าที่กำหนด
+                query_update = f"""
+                    UPDATE {table_name}
+                    SET device_names = %s
+                    WHERE units = %s;
+                """
+                cur.execute(query_update, (updated_value, units))
 
     # บันทึกการเปลี่ยนแปลงทั้งหมดและปิดการเชื่อมต่อ
     conn.commit()

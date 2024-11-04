@@ -200,7 +200,7 @@
             const allData = [];
             document.querySelectorAll('td[contenteditable="true"]').forEach(cell => {
                 const original = cell.getAttribute('data-original');
-                const updated = cell.textContent;
+                const updated = cell.textContent.trim();
                 const tableName = cell.getAttribute('data-table-name');
                 const units = cell.getAttribute('data-units');
                 

@@ -95,6 +95,14 @@
             transition: background-color 0.3s ease;
         }
 
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            max-width: 400px;
+        }
+
         button:hover {
             background-color: #0077a3;
         }
@@ -111,16 +119,38 @@
         .highlight-FT {
             background-color: pink;
         }
-
+        form.delete-form button {
+            background-color: #dc3545;
+        }
         td[contenteditable="false"] {
             background-color: #f0f0f0;
         }
     </style>
 </head>
 <body>
+
+    
     <div class="header">
         <h1>Edit History Log</h1>
+        <div class="top-buttons">
+            <a href="/racklayout">
+                <button>Show Rack Layout</button>
+            </a>
+            <a href="/oob_agg">
+                <button>Show OOB</button>
+            </a>
+
+
+            <form action="/export_excel" method="get" style="display: inline;">
+                <button type="submit">Export to Excel</button>
+            </form>
+
+            <form action="/delete_files" method="post" class="delete-form">
+                <button type="submit">Delete Files</button>
+            </form>
+        </div>
     </div>
+
 
     <div class="content">
         <div class="table-container">
